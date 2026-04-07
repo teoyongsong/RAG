@@ -13,6 +13,7 @@ It uses:
 ## Project layout
 
 - `resources/documents/` - your source files (`.txt`, `.md`, `.pdf`)
+- `resources/public_demo/` - safe sample docs used for Streamlit public demo bootstrap
 - `resources/document_catalog.json` - auto-generated catalog (ignored by git)
 - `resources/DOCUMENT_INDEX.md` - auto-generated markdown index (ignored by git)
 - `chroma_db/` - vector index (ignored by git)
@@ -65,6 +66,7 @@ This repo includes:
 Recommended public-demo environment/secrets:
 
 - `PUBLIC_DEMO_MODE=1`
+- `AUTO_BOOTSTRAP_DEMO=1` (auto-ingest `resources/public_demo/` when catalog is empty)
 - `SHOW_DOC_METADATA=0`
 - `ALLOW_USER_UPLOAD=0`
 - `ALLOW_USER_REINDEX=0`

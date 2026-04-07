@@ -24,7 +24,7 @@ load_dotenv()
 try:
     import pandas as pd
     from ingest import ingest_all
-    from rag_common import CATALOG_PATH, DATA_DIR, TOP_K
+    from rag_common import CATALOG_PATH, DATA_DIR, PUBLIC_DEMO_DIR, TOP_K
     from rag_core import default_backend, run_query
 except ImportError as e:
     st.error(
@@ -75,6 +75,22 @@ ALLOW_USER_REINDEX = os.environ.get("ALLOW_USER_REINDEX", "0").strip().lower() i
     "yes",
     "on",
 }
+AUTO_BOOTSTRAP_DEMO = os.environ.get("AUTO_BOOTSTRAP_DEMO", "1").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+
+
+@st.cache_resource(show_spinner=False)
+def bootstrap_public_demo() -> tuple[bool, str]:
+    """Index public demo files once when cloud app starts with no catalog."""
+    if not AUTO_BOOTSTRAP_DEMO:
+        return False, "AUTO_BOOTSTRAP_DEMO is disabled."
+    if not PUBLIC_DEMO_DIR.is_dir():
+        return False, f"Missing demo folder: {PUBLIC_DEMO_DIR}"
+    return ingest_all(PUBLIC_DEMO_DIR)
 
 st.title("RAG Studio")
 if PUBLIC_DEMO_MODE:
@@ -115,6 +131,15 @@ with st.sidebar:
 
 cat = catalog_payload()
 docs = cat.get("documents") or []
+if PUBLIC_DEMO_MODE and not docs:
+    ok, msg = bootstrap_public_demo()
+    cat = catalog_payload()
+    docs = cat.get("documents") or []
+    if ok:
+        st.success("Loaded built-in public demo dataset.")
+    elif "disabled" not in msg.lower():
+        st.warning(msg)
+
 if docs and SHOW_DOC_METADATA and not PUBLIC_DEMO_MODE:
     with st.expander(f"Document library ({len(docs)} files)", expanded=False):
         rows = [

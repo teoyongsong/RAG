@@ -12,6 +12,7 @@ os.environ.setdefault("HF_HOME", str(_hf))
 # Canonical document store (all uploads and ingests use this folder)
 RESOURCES_DIR = ROOT / "resources"
 DOCUMENTS_DIR = RESOURCES_DIR / "documents"
+PUBLIC_DEMO_DIR = RESOURCES_DIR / "public_demo"
 CATALOG_PATH = RESOURCES_DIR / "document_catalog.json"
 INDEX_MD_PATH = RESOURCES_DIR / "DOCUMENT_INDEX.md"
 
