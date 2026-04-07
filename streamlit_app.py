@@ -75,6 +75,7 @@ ALLOW_USER_REINDEX = os.environ.get("ALLOW_USER_REINDEX", "0").strip().lower() i
     "yes",
     "on",
 }
+MAX_QUESTIONS_PER_SESSION = int(os.environ.get("MAX_QUESTIONS_PER_SESSION", "5"))
 AUTO_BOOTSTRAP_DEMO = os.environ.get("AUTO_BOOTSTRAP_DEMO", "1").strip().lower() in {
     "1",
     "true",
@@ -104,6 +105,9 @@ else:
         "`resources/document_catalog.json` and updated on ingest."
     )
 
+if "asked_count" not in st.session_state:
+    st.session_state.asked_count = 0
+
 with st.sidebar:
     st.header("Settings")
     backend = st.selectbox(
@@ -116,6 +120,9 @@ with st.sidebar:
     )
     k = st.slider("Chunks (k)", min_value=1, max_value=16, value=TOP_K)
     no_llm = st.checkbox("Retrieval only (no LLM)", value=False)
+    st.caption(
+        f"Questions used this session: {st.session_state.asked_count}/{MAX_QUESTIONS_PER_SESSION}"
+    )
     st.divider()
     if ALLOW_USER_REINDEX and st.button(
         "Reindex from resources/documents", use_container_width=True
@@ -162,6 +169,11 @@ with col_a:
 if ask:
     if not question.strip():
         st.warning("Enter a question.")
+    elif st.session_state.asked_count >= MAX_QUESTIONS_PER_SESSION:
+        st.error(
+            f"Question limit reached ({MAX_QUESTIONS_PER_SESSION}/{MAX_QUESTIONS_PER_SESSION}) for this session."
+        )
+        st.info("Refresh the page to start a new session.")
     else:
         with st.spinner("Searching and generating…"):
             r = run_query(
@@ -170,6 +182,7 @@ if ask:
                 backend=backend,
                 no_llm=no_llm,
             )
+        st.session_state.asked_count += 1
         if not r.ok:
             st.error(r.error or "Query failed.")
         else:
