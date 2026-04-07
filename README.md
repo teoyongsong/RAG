@@ -23,7 +23,7 @@ It uses:
 cd RAG
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements_local.txt
 ```
 
 Add documents to `resources/documents/`, then index:
@@ -57,6 +57,10 @@ streamlit run streamlit_app.py
 ## Streamlit Cloud deployment
 
 Use `streamlit_app.py` as the app entry point.
+This repo includes:
+- `requirements.txt` (cloud-safe, faster deploy)
+- `requirements_local.txt` (full local stack: FastAPI + local Llama)
+- `runtime.txt` pinned to Python 3.11 for dependency compatibility.
 
 Recommended public-demo environment/secrets:
 
