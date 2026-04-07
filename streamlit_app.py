@@ -93,7 +93,7 @@ def bootstrap_public_demo() -> tuple[bool, str]:
         return False, f"Missing demo folder: {PUBLIC_DEMO_DIR}"
     return ingest_all(PUBLIC_DEMO_DIR)
 
-st.title("RAG Studio")
+st.title("RAG Studio for Machine Learning")
 if PUBLIC_DEMO_MODE:
     st.caption(
         "Public demo mode: private document details are hidden. "
