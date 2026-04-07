@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RAG Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --border: #2d3a4d;
+      --text: #e8edf4;
+      --muted: #8b9cb3;
+      --accent: #5b8def;
+      --accent-dim: #3d6ec4;
+      --ok: #3ecf8e;
+      --warn: #f0c14d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: radial-gradient(1200px 600px at 20% -10%, #1e2a3d 0%, var(--bg) 55%);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .wrap {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 4rem;
+    }
+    header {
+      margin-bottom: 2rem;
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.35rem;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.35rem;
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 0.45rem;
+    }
+    textarea {
+      width: 100%;
+      min-height: 96px;
+      padding: 0.85rem 1rem;
+      font: inherit;
+      font-size: 1rem;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      resize: vertical;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.2);
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: flex-end;
+      margin-top: 1rem;
+    }
+    .field { flex: 1; min-width: 140px; }
+    select {
+      width: 100%;
+      padding: 0.65rem 0.75rem;
+      font: inherit;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .checks {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding-bottom: 0.35rem;
+    }
+    .checks input { width: 1.1rem; height: 1.1rem; accent-color: var(--accent); }
+    .checks label {
+      margin: 0;
+      text-transform: none;
+      font-weight: 500;
+      letter-spacing: 0;
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      margin-top: 1.1rem;
+    }
+    button {
+      font: inherit;
+      font-weight: 600;
+      padding: 0.65rem 1.15rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    button:active { transform: scale(0.98); }
+    .btn-primary {
+      background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dim) 100%);
+      color: #fff;
+    }
+    .btn-primary:hover { filter: brightness(1.06); }
+    .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; filter: none; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+    .hint {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 0.75rem;
+    }
+    .out-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin: 0 0 0.75rem;
+    }
+    .answer {
+      font-size: 1.05rem;
+      padding: 1rem 1.1rem;
+      background: var(--bg);
+      border-radius: 8px;
+      border-left: 3px solid var(--ok);
+    }
+    .chunk {
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      background: var(--bg);
+      border-radius: 8px;
+      margin-bottom: 0.65rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border: 1px solid var(--border);
+    }
+    .chunk-meta {
+      font-family: "DM Sans", sans-serif;
+      font-size: 0.75rem;
+      color: var(--accent);
+      margin-bottom: 0.4rem;
+    }
+    .err {
+      color: #ff8a8a;
+      padding: 0.75rem 1rem;
+      background: rgba(255, 100, 100, 0.08);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 100, 100, 0.25);
+    }
+    .status {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .status.ok { color: var(--ok); }
+    .out-panel { min-height: 120px; }
+    .out-placeholder {
+      color: var(--muted);
+      font-size: 0.95rem;
+      padding: 0.5rem 0;
+    }
+    .doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    .doc-table th, .doc-table td {
+      text-align: left;
+      padding: 0.5rem 0.65rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .doc-table th { color: var(--muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .doc-table code { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.8rem; color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>RAG Studio for Machine Learning (M3)</h1>
+      <p class="sub">Documents live under <code style="color: var(--accent);">resources/documents</code>. The catalog lists every file; questions search the vector index, preferring files whose titles match your wording.</p>
+    </header>
+
+    <div class="panel" id="catalog-panel">
+      <p class="out-title">Document library</p>
+      <p class="hint" style="margin-top: 0;">Titles are saved in <code>resources/document_catalog.json</code> and summarized in <code>resources/DOCUMENT_INDEX.md</code> whenever you ingest or upload.</p>
+      <div id="catalog-box"><p class="status">Loading catalog…</p></div>
+    </div>
+
+    <div class="panel">
+      <label for="q">Question</label>
+      <textarea id="q" placeholder="e.g. What is RAG and what are the typical steps?"></textarea>
+      <div class="row">
+        <div class="field">
+          <label for="backend">Answer model</label>
+          <select id="backend">
+            <option value="local">Local Llama (GGUF)</option>
+            <option value="openai">OpenAI (API key in .env)</option>
+          </select>
+        </div>
+        <div class="field" style="max-width: 120px;">
+          <label for="k">Chunks (k)</label>
+          <select id="k">
+            <option value="2">2</option>
+            <option value="4" selected>4</option>
+            <option value="6">6</option>
+            <option value="8">8</option>
+          </select>
+        </div>
+        <div class="checks">
+          <input type="checkbox" id="no_llm" />
+          <label for="no_llm">Retrieval only (no LLM)</label>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn-primary" id="ask">Ask</button>
+        <button type="button" class="btn-ghost" id="reindex">Reindex from resources/documents</button>
+      </div>
+      <p class="hint">Add <code style="color: var(--accent);">.txt</code>, <code style="color: var(--accent);">.md</code>, or <code style="color: var(--accent);">.pdf</code> under <code style="color: var(--accent);">resources/documents</code>, then <strong>Reindex</strong>, or upload below.</p>
+    </div>
+
+    <div class="panel">
+      <label for="file">Upload document</label>
+      <div class="row" style="margin-top: 0.35rem; align-items: center;">
+        <input type="file" id="file" accept=".txt,.md,.markdown,.pdf" style="color: var(--muted);" />
+        <button type="button" class="btn-ghost" id="upload">Upload &amp; reindex</button>
+      </div>
+      <p class="status" id="upload-status"></p>
+    </div>
+
+    <div class="panel out-panel" id="out-panel">
+      <p class="out-title">Answer</p>
+      <div id="answer-box"><p class="out-placeholder" id="answer-placeholder">Generated answer appears here after you click <strong>Ask</strong> (unless “Retrieval only” is checked).</p></div>
+      <p class="out-title" style="margin-top: 1.25rem;">Retrieved chunks</p>
+      <div id="chunks-box"><p class="out-placeholder" id="chunks-placeholder">Matching passages from your index appear here.</p></div>
+    </div>
+
+    <p class="status" id="run-status"></p>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const askBtn = $("ask");
+    const runStatus = $("run-status");
+    const outPanel = $("out-panel");
+    const answerBox = $("answer-box");
+    const chunksBox = $("chunks-box");
+    async function postJson(url, body) {
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        const d = data.detail;
+        const msg =
+          typeof d === "string"
+            ? d
+            : Array.isArray(d)
+              ? d.map((x) => x.msg || JSON.stringify(x)).join(" ")
+              : data.message || r.statusText;
+        throw new Error(msg);
+      }
+      return data;
+    }
+
+    askBtn.addEventListener("click", async () => {
+      const question = $("q").value.trim();
+      if (!question) {
+        runStatus.textContent = "Enter a question.";
+        return;
+      }
+      askBtn.disabled = true;
+      runStatus.textContent = "Running…";
+      answerBox.innerHTML = "";
+      chunksBox.innerHTML = "";
+
+      try {
+        const data = await postJson("/api/query", {
+          question,
+          k: parseInt($("k").value, 10),
+          backend: $("backend").value,
+          no_llm: $("no_llm").checked,
+        });
+
+        const noLlm = $("no_llm").checked;
+        if (!data.ok) {
+          answerBox.innerHTML = '<div class="err">' + escapeHtml(data.error || "Request failed.") + "</div>";
+          chunksBox.innerHTML = '<p class="status">—</p>';
+          runStatus.textContent = "";
+          outPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          return;
+        }
+        if (data.error && !data.chunks?.length) {
+          answerBox.innerHTML = '<div class="err">' + escapeHtml(data.error) + "</div>";
+          chunksBox.innerHTML = '<p class="status">No chunks.</p>';
+          runStatus.textContent = "";
+          outPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          return;
+        }
+        if (data.error && data.chunks?.length) {
+          answerBox.innerHTML = '<div class="err">' + escapeHtml(data.error) + "</div>";
+        } else if (data.answer) {
+          const label = data.answer_backend === "openai" ? "OpenAI" : "Local Llama";
+          answerBox.innerHTML = '<div class="answer"><strong style="color:var(--muted);font-size:0.85rem;">' + label + "</strong><br/>" + escapeHtml(data.answer) + "</div>";
+        } else if (!data.chunks?.length) {
+          answerBox.innerHTML = '<p class="status">No matching chunks in the index.</p>';
+        } else if (noLlm) {
+          answerBox.innerHTML =
+            '<p class="status"><strong>Retrieval only</strong> — showing passages below; no LLM was run.</p>';
+        } else {
+          answerBox.innerHTML =
+            '<p class="status">No generated answer (check local GGUF or OpenAI key).</p>';
+        }
+
+        if (data.chunks?.length) {
+          chunksBox.innerHTML = data.chunks.map((c, i) => {
+            const t = (c.title && String(c.title).trim()) ? " — " + escapeHtml(c.title) : "";
+            return '<div class="chunk"><div class="chunk-meta">[' + (i + 1) + "] " + escapeHtml(c.source) + t + "</div>" + escapeHtml(c.text) + "</div>";
+          }).join("");
+        } else {
+          chunksBox.innerHTML = '<p class="status">No chunks.</p>';
+        }
+        runStatus.textContent = data.ok ? "Done." : "";
+        outPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      } catch (e) {
+        runStatus.textContent = "";
+        answerBox.innerHTML = '<div class="err">' + escapeHtml(e.message) + "</div>";
+        chunksBox.innerHTML = "";
+        outPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      } finally {
+        askBtn.disabled = false;
+      }
+    });
+
+    $("reindex").addEventListener("click", async () => {
+      runStatus.textContent = "Reindexing…";
+      try {
+        const r = await fetch("/api/reindex", { method: "POST" });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data.detail || r.statusText);
+        runStatus.textContent = data.message || "Reindexed.";
+        runStatus.classList.add("ok");
+        loadCatalog();
+      } catch (e) {
+        runStatus.textContent = e.message;
+        runStatus.classList.remove("ok");
+      }
+    });
+
+    $("upload").addEventListener("click", async () => {
+      const f = $("file").files?.[0];
+      const st = $("upload-status");
+      if (!f) {
+        st.textContent = "Choose a file first.";
+        return;
+      }
+      st.textContent = "Uploading…";
+      const fd = new FormData();
+      fd.append("file", f);
+      try {
+        const r = await fetch("/api/upload", { method: "POST", body: fd });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data.detail || r.statusText);
+        st.textContent = data.message + " (saved as " + data.saved_as + ")";
+        st.classList.add("ok");
+        loadCatalog();
+      } catch (e) {
+        st.textContent = e.message;
+        st.classList.remove("ok");
+      }
+    });
+
+    function escapeHtml(s) {
+      const d = document.createElement("div");
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    async function loadCatalog() {
+      const el = $("catalog-box");
+      try {
+        const data = await fetch("/api/catalog").then(function (r) { return r.json(); });
+        const docs = data.documents || [];
+        if (!docs.length) {
+          el.innerHTML = '<p class="status">No documents yet. Add files to <code>resources/documents</code> and click <strong>Reindex</strong>.</p>';
+          return;
+        }
+        const rows = docs.map(function (d) {
+          return "<tr><td>" + escapeHtml(d.title || "") + "</td><td><code>" + escapeHtml(d.relative_path || "") + "</code></td><td>" + escapeHtml(d.kind || "") + "</td></tr>";
+        }).join("");
+        el.innerHTML = '<table class="doc-table"><thead><tr><th>Title</th><th>File</th><th>Kind</th></tr></thead><tbody>' + rows + "</tbody></table>";
+      } catch (e) {
+        el.innerHTML = '<p class="err">' + escapeHtml(e.message) + "</p>";
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadCatalog);
+  </script>
+</body>
+</html>

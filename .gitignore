@@ -1,0 +1,14 @@
+.cache/
+chroma_db/
+models/*.gguf
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+resources/documents/*
+!resources/documents/.gitkeep
+resources/document_catalog.json
+resources/DOCUMENT_INDEX.md
+.streamlit/secrets.toml
+*.Zone.Identifier
