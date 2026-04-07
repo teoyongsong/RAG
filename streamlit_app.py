@@ -25,7 +25,7 @@ try:
     import pandas as pd
     from ingest import ingest_all
     from rag_common import CATALOG_PATH, DATA_DIR, PUBLIC_DEMO_DIR, TOP_K
-    from rag_core import default_backend, run_query
+    from rag_core import run_query
 except ImportError as e:
     st.error(
         "Missing dependencies. From the project folder run: `pip install -r requirements.txt`"
@@ -49,7 +49,7 @@ def catalog_payload() -> dict:
     return {"documents": [], "updated_at": None}
 
 
-st.set_page_config(page_title="RAG Studio", page_icon="📚", layout="wide")
+st.set_page_config(page_title="RAG Studio  for Machine Learning (M3)", page_icon="📚", layout="wide")
 
 PUBLIC_DEMO_MODE = os.environ.get("PUBLIC_DEMO_MODE", "1").strip().lower() in {
     "1",
@@ -110,16 +110,9 @@ if "asked_count" not in st.session_state:
 
 with st.sidebar:
     st.header("Settings")
-    backend = st.selectbox(
-        "Answer model",
-        ("local", "openai"),
-        index=0 if default_backend() == "local" else 1,
-        format_func=lambda x: "Local Llama (GGUF)"
-        if x == "local"
-        else "OpenAI (needs OPENAI_API_KEY)",
-    )
+    backend = "openai"
+    st.caption("Answer model: OpenAI")
     k = st.slider("Chunks (k)", min_value=1, max_value=16, value=TOP_K)
-    no_llm = st.checkbox("Retrieval only (no LLM)", value=False)
     st.caption(
         f"Questions used this session: {st.session_state.asked_count}/{MAX_QUESTIONS_PER_SESSION}"
     )
@@ -180,7 +173,7 @@ if ask:
                 question.strip(),
                 k=k,
                 backend=backend,
-                no_llm=no_llm,
+                no_llm=False,
             )
         st.session_state.asked_count += 1
         if not r.ok:
@@ -194,10 +187,8 @@ if ask:
                 label = "OpenAI" if r.answer_backend == "openai" else "Local Llama"
                 st.markdown(f"### Answer ({label})")
                 st.markdown(r.answer)
-            elif r.chunks and no_llm:
-                st.info("Retrieval only — passages below; no LLM was run.")
             elif r.chunks and not r.answer and not r.error:
-                st.warning("No generated answer (check local GGUF or OpenAI key).")
+                st.warning("No generated answer (check OpenAI key/settings).")
 
             if r.chunks and not PUBLIC_DEMO_MODE:
                 st.subheader("Retrieved chunks")
