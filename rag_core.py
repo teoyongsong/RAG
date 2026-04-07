@@ -23,8 +23,9 @@ from chromadb import PersistentClient
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
 SYSTEM_PROMPT = """You are a helpful assistant. Answer using ONLY the provided context.
-If the context does not contain enough information, say you don't know based on the documents.
-Keep answers concise."""
+Prefer giving the best possible concise answer from the context.
+If evidence is partial, say what is supported by the context and mention uncertainty.
+Only say you don't know when the context is clearly unrelated or missing."""
 
 
 def build_prompt(question: str, contexts: list[str]) -> str:
@@ -36,6 +37,32 @@ def build_prompt(question: str, contexts: list[str]) -> str:
 Question: {question}
 
 Answer:"""
+
+
+def _looks_like_unknown(text: str) -> bool:
+    t = (text or "").strip().lower()
+    return any(
+        phrase in t
+        for phrase in (
+            "i don't know",
+            "do not know",
+            "not enough information",
+            "insufficient information",
+            "cannot determine",
+            "can't determine",
+        )
+    )
+
+
+def _extractive_fallback(chunks: list[dict], max_chars: int = 420) -> str:
+    """Return a short answer built directly from retrieved chunks."""
+    if not chunks:
+        return ""
+    text = " ".join((c.get("text") or "").strip() for c in chunks[:2]).strip()
+    if not text:
+        return ""
+    text = " ".join(text.split())
+    return text[: max_chars - 1] + "…" if len(text) > max_chars else text
 
 
 def resolve_llama_path() -> Path | None:
@@ -201,10 +228,18 @@ def run_query(
         ans = answer_openai(prompt)
         if not ans:
             return QueryResult(True, chunks, None, None, "OpenAI request failed.")
+        if _looks_like_unknown(ans):
+            fb = _extractive_fallback(chunks)
+            if fb:
+                ans = f"{ans}\n\nBased on retrieved notes: {fb}"
         return QueryResult(True, chunks, ans, "openai", None)
 
     ans = answer_local_llama(prompt)
     if ans:
+        if _looks_like_unknown(ans):
+            fb = _extractive_fallback(chunks)
+            if fb:
+                ans = f"{ans}\n\nBased on retrieved notes: {fb}"
         return QueryResult(True, chunks, ans, "local", None)
 
     if resolve_llama_path() is None:

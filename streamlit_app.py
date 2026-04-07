@@ -96,7 +96,7 @@ def bootstrap_public_demo() -> tuple[bool, str]:
 st.title("RAG Studio for Machine Learning")
 if PUBLIC_DEMO_MODE:
     st.caption(
-        "Public demo mode: private document details are hidden. "
+        "Demo only: private document details are hidden. "
         "Users can ask questions, but source files/chunks are not exposed."
     )
 else:
