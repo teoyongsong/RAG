@@ -110,8 +110,20 @@ if "asked_count" not in st.session_state:
 
 with st.sidebar:
     st.header("Settings")
-    backend = "openai"
-    st.caption("Answer model: OpenAI")
+    if PUBLIC_DEMO_MODE:
+        backend = "openai"
+        st.caption("Answer model: OpenAI")
+        no_llm = False
+    else:
+        backend = st.selectbox(
+            "Answer model",
+            ("local", "openai"),
+            index=0,
+            format_func=lambda x: "Local Llama (GGUF)"
+            if x == "local"
+            else "OpenAI (needs OPENAI_API_KEY)",
+        )
+        no_llm = st.checkbox("Retrieval only (no LLM)", value=False)
     k = st.slider("Chunks (k)", min_value=1, max_value=16, value=TOP_K)
     st.caption(
         f"Questions used this session: {st.session_state.asked_count}/{MAX_QUESTIONS_PER_SESSION}"
@@ -173,7 +185,7 @@ if ask:
                 question.strip(),
                 k=k,
                 backend=backend,
-                no_llm=False,
+                no_llm=no_llm,
             )
         st.session_state.asked_count += 1
         if not r.ok:
